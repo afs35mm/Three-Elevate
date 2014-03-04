@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>THREE WORLD</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				color: #000;
+				font-family:Monospace;
+				font-size:13px;
+				text-align:center;
+				font-weight: bold;
+				background-color: #fff;
+				margin: 0px;
+				overflow: hidden;
+			}
+			#map{
+				position:absolute;
+				bottom:0;
+				right:0;
+				width:35%;
+				height:35%;
+				z-index:101;
+				background:#fff;
+			}
+		</style>
+		
+	</head>
+
+	<body>
+		<div id="container"></div>
+		<div id="map"></div>
+	</body>
+		<script src="lib/three.min.js"></script>
+		<script src="lib/TrackballControls.js"></script>
+		<script src="lib/Detector.js"></script>
+		<script src="lib/stats.min.js"></script>
+	    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
+	    <!--<script src="https://www.google.com/jsapi"></script>-->
+
+		<script src="js/main.js"></script>
+
+	    <script>
+	    /**
+		GET SINGLE POINT ELEVATION
+	    function getElevation(event) {
+	        var locations = [];
+	        elevator = new google.maps.ElevationService();
+	        for (var i = 0; i < 1; i++) {
+	            var location = new google.maps.LatLng(61.254386097464504, -150.3973388671875);
+	             //61.254386097464504, e: -150.3973388671875,
+	            locations.push(location);
+	            var positionalRequest = { 'locations': locations }
+	            elevator.getElevationForLocations(positionalRequest, function (results, status) {
+	                if (status == 'OK') {
+	                    if (results[0]) {
+	                        var sphereHeight = results[0].elevation;
+	                        console.log(sphereHeight);
+							var geometry = new THREE.SphereGeometry( 3, 32, 32 );
+							var material = new THREE.MeshBasicMaterial( {color: "rgb(0,255,0)" } );
+							var sphere = new THREE.Mesh( geometry, material );
+							sphere.position.y = sphereHeight;
+							scene.add(sphere);
+	                   }
+	                }else{
+	                	alert(status);
+	                }
+	            });
+	        }
+	    }
+	    getElevation();
+
+	    **/
+	    /**
+		GET PATH ELEVATION
+	    function getPath(){
+	    	elevator = new google.maps.ElevationService();
+			var whitney = new google.maps.LatLng(36.578581, -118.291994);
+			var badwater = new google.maps.LatLng(36.23998, -116.83171);
+	    	var path = [ whitney, badwater];
+	    	var pathRequest = {
+			    'path': path,
+			    'samples': 100
+			}
+	    
+	    	elevator.getElevationAlongPath(pathRequest, plotElevation);
+
+	    	// Takes an array of ElevationResult objects, draws the path on the map
+			// and plots the elevation profile on a Visualization API ColumnChart.
+			function plotElevation(results, status) {
+			  if (status != google.maps.ElevationStatus.OK) {
+			    return;
+			  }
+			  var elevations = results;
+			  console.log(results);
+
+			  for( i = 0; i < 100; i++){
+					var geometry = new THREE.SphereGeometry( 3, 32, 32 );
+					var material = new THREE.MeshBasicMaterial( {color: "rgb(0,255,0)" } );
+					var sphere = new THREE.Mesh( geometry, material );
+					sphere.position.y = results[i].elevation * .03;
+					sphere.position.x = i;
+					scene.add(sphere);
+					//console.log(results[i].elevation);
+			  }
+			}
+	    }
+
+	    getPath();
+	    **/
+	    </script>
+</html>
