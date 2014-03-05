@@ -6,11 +6,11 @@ window.TW = window.TW || {};
 	//3JS GLOBALS
 	var container, stats, camera, controls, scene, renderer,
 	//GOOGLE MAPS ELEVATION GLOBALS
-	elevator, map, infowindow, flightPath,
+	elevator, map, infowindow, flightPath, midwayMarker;
 	config = {
 		gridSize: 100,
 		gridUnit: 10,
-		samplePoints: 100
+		samplePoints: 3
 	},
 	markerLocations = [],
 	makeButton = document.getElementById("make"),
@@ -100,10 +100,8 @@ window.TW = window.TW || {};
 		elevator = new google.maps.ElevationService();
     };
 
-
-	function addMarker(event){
+	function addOriginalPoint(event){
 		if ( markerLocations.length == 2){
-			alert('2 Markers max...');
 			return;
 		}
 		var clickedLocation = event.latLng;
@@ -119,104 +117,112 @@ window.TW = window.TW || {};
 			makeButton.disabled = false;
 		}
 		marker.setMap(map);
-		//getMidPoint();
 	};
 
-	function getMidPoint(lat1, lat2, lon1, lon2){
-		    
-		    // var dLon = (lon2 - lon1).toRad();
-		    // //convert to radians
-		    // lat1 = (lat1).toRad();
-		    // lat2 = (lat2).toRad();
-		    // lon1 = (lon1).toRad();
-
-		    // var Bx = Math.cos(lat2) * Math.cos(dLon);
-		    // var By = Math.cos(lat2) * Math.sin(dLon);
-		    // var lat3 = Math.atan2(Math.sin(lat1) + Math.sin(lat2), Math.sqrt((Math.cos(lat1) + Bx) * (Math.cos(lat1) + Bx) + By * By));
-		    // var lon3 = lon1 + Math.atan2(By, Math.cos(lat1) + Bx);
-
-		    // //print out in degrees
-		    // console.log((lat3).toDegrees() + " " + (lon3).toDegrees());
-
-		    if (Math.abs(lon2-lon1) > Math.PI) lon1 += 2*Math.PI; // crossing anti-meridian
-
-			var lat3 = (lat1+lat2)/2;
-			var f1 = Math.tan(Math.PI/4 + lat1/2);
-			var f2 = Math.tan(Math.PI/4 + lat2/2);
-			var f3 = Math.tan(Math.PI/4 + lat3/2);
-			var lon3 = ( (lon2-lon1)*Math.log(f3) + lon1*Math.log(f2) - lon2*Math.log(f1) ) / 
-			   Math.log(f2/f1);
-
-			if (!isFinite(lon3)) lon3 = (lon1+lon2)/2; // parallel of latitude
-
-			lon3 = (lon3+3*Math.PI) % (2*Math.PI) - Math.PI;  // normalise to -180..+180º
-
-			console.log(lat3, lon3);
-
-		    var midwayPosition = new google.maps.LatLng(lat3, lon3);
-			var midwayMarker = new google.maps.Marker({
-				map:map,
-				draggable:true,
-				animation: google.maps.Animation.DROP,
-				position: midwayPosition
-			});
-			midwayMarker.setMap(map);
-	};
-
-  	function makeLine(){
+  	function makeGrid(){
   		var lat1 = markerLocations[0].getPosition().d;
   		var lon1 = markerLocations[0].getPosition().e;
   		var lat2 = markerLocations[1].getPosition().d;
   		var lon2 = markerLocations[1].getPosition().e;
+  		var gridOne = new Grid(lat1, lon1, lat2, lon2, config.samplePoints);
+  		gridOne.showMidPoint();
+  		gridOne.connectOrigins();
+  		console.log(gridOne);
+  	};
 
-		var locationOne = new google.maps.LatLng(lat1, lon1);
+  	//grid object constructor
+  	function Grid(lat1, lon1, lat2, lon2, points){
+  		this.lat1 = lat1;
+  		this.lon1 = lon1;
+  		this.lat2 = lat2;
+  		this.lon2 = lon2;
+  		this.points = points;
+  		var locationOne = new google.maps.LatLng(lat1, lon1);
 		var locationTwo = new google.maps.LatLng(lat2, lon2);
+
+  		this.showMidPoint = function(){
+			var dLon = ((lon2 - lon1)).toRad();
+			radLat1 = (lat1).toRad();
+			radLat2 = (lat2).toRad();
+			radLon1 = (lon1).toRad();
+			var Bx = Math.cos(radLat2) * Math.cos(dLon);
+			var By = Math.cos(radLat2) * Math.sin(dLon);
+			var lat3 = Math.atan2(Math.sin(radLat1) + Math.sin(radLat2), Math.sqrt((Math.cos(radLat1) + Bx) * (Math.cos(radLat1) + Bx) + By * By));
+			var lon3 = radLon1 + Math.atan2(By, Math.cos(radLat1) + Bx);
+			lat3 = (lat3).toDeg();
+			lon3 = (lon3).toDeg();
+			this.setMarker(lat3, lon3);
+  		}
+
+  		this.connectOrigins = function(){
+  			this.makeLine(lat1, lon1, lat2, lon2, '#0000FF' );
+  		}
+
+  		this.getDistance = function(){
+			var distance = google.maps.geometry.spherical.computeDistanceBetween(
+				locationOne,
+				locationTwo
+			);
+			return distance;
+  		}
+  	}
+
+  	Grid.prototype.setMarker = function(lat, lon) {
+    	var markerPosition = new google.maps.LatLng(lat, lon);
+		marker = new google.maps.Marker({
+			map:map,
+			draggable:false,
+			animation: google.maps.Animation.DROP,
+			position: markerPosition
+		});
+		marker.setMap(map);
+	};
+
+	Grid.prototype.makeLine = function(lat1, lon1, lat2, lon2, color) {
 		var flightPlanCoordinates = [
-			locationOne, locationTwo
+			new google.maps.LatLng(lat1, lon1),
+			new google.maps.LatLng(lat2, lon2)
 		];
-		if(flightPathExists) flightPath.setMap(null);
-		flightPath = new google.maps.Polyline({
+		var lineColor = (color) ? color : '#FF0000';
+		var flightPath = new google.maps.Polyline({
 			path: flightPlanCoordinates,
 			geodesic: true,
-			strokeColor: '#FF0000',
+			strokeColor: lineColor,
 			strokeOpacity: 1.0,
 			strokeWeight: 2
 		});
 		flightPath.setMap(map);
-		flightPathExists = true;
-		
-		getMidPoint(lat1, lon2, lat2, lon2);
+	};
 
+  	function addAngleEquations(){
+  		if (typeof(Number.prototype.toRad) === "undefined") {
+			Number.prototype.toRad = function() {
+				return this * Math.PI / 180;
+			}
+		}
+		if (typeof(Number.prototype.toDegrees) === "undefined") {
+			Number.prototype.toDeg = function() {
+				return this * (180 / Math.PI);
+			}
+		}
   	};
 
-
 	function bindDomEvents(){
+		makeButton.disabled = true;
 		window.addEventListener( 'resize', onWindowResize, false );
-		google.maps.event.addListener(map, 'click', addMarker);
+		google.maps.event.addListener(map, 'click', addOriginalPoint);
 		document.getElementById("map").addEventListener('mousedown', function(e){
 			e.stopPropagation();
 		});
-		makeButton.addEventListener("click", makeLine );
+		makeButton.addEventListener("click", makeGrid );
+
 	};
 
     function init( ) {
-    	makeButton.disabled = true;
     	setup3World();
     	setupMap();
+    	addAngleEquations();
     	bindDomEvents();
-
-    	if (typeof(Number.prototype.toRad) === "undefined") {
-			Number.prototype.toRad = function(angle) {
-				return angle * Math.PI / 180;
-			}
-		}
-
-		if (typeof(Number.prototype.toDegrees) === "undefined") {
-			Number.prototype.toDegrees = function(angle) {
-				return angle * (180 / Math.PI);
-			}
-		}
-		
     } 
 
     init();
