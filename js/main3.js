@@ -37,9 +37,6 @@ window.TW = window.TW || {};
   		var lat2 = markerLocations[1].getPosition().d;
   		var lon2 = markerLocations[1].getPosition().e;
   		var gridOne = new Grid(lat1, lon1, lat2, lon2, config.samplePoints);
-  		gridOne.showMidPoint();
-  		gridOne.connectOrigins();
-  		gridOne.findHalf();
   		gridOne.segmentLine();
   	};
  
@@ -57,52 +54,11 @@ window.TW = window.TW || {};
   		var locationOne = new google.maps.LatLng(lat1, lon1);
 		var locationTwo = new google.maps.LatLng(lat2, lon2);
 		var pointsArr = []
- 		
-  		this.showMidPoint = function(){
-			var dLon = ((lon2 - lon1)).toRad();
-			var Bx = Math.cos(radLat2) * Math.cos(dLon);
-			var By = Math.cos(radLat2) * Math.sin(dLon);
-			var lat3 = Math.atan2(Math.sin(radLat1) + Math.sin(radLat2), Math.sqrt((Math.cos(radLat1) + Bx) * (Math.cos(radLat1) + Bx) + By * By));
-			var lon3 = radLon1 + Math.atan2(By, Math.cos(radLat1) + Bx);
-			lat3 = (lat3).toDeg();
-			lon3 = (lon3).toDeg();
-			this.setMarker(lat3, lon3); 
-  		}
-
-  		this.findBearing = function(){
-  			var dLon = (radLon2-radLon1);
-		    var y = Math.sin(dLon) * Math.cos(radLat2);
-			var x = Math.cos(radLat1)*Math.sin(radLat2) -
-			        Math.sin(radLat1)*Math.cos(radLat2)*Math.cos(dLon);
-			var brng = Math.atan2(y, x);
-			return brng;
-  		}
-
-  		this.findHalf = function(){
-  			//first need to find the bearing
-  			var dLon = (radLon2-radLon1);
-		    var y = Math.sin(dLon) * Math.cos(radLat2);
-			var x = Math.cos(radLat1)*Math.sin(radLat2) -
-			        Math.sin(radLat1)*Math.cos(radLat2)*Math.cos(dLon);
-			var brng = Math.atan2(y, x);
-			
-			var wholeDistanceKm = this.getDistance() * .001;
-			
-			var R = 6378.1 ;
-			var d = wholeDistanceKm / 2; 
-			
-			newLat = Math.asin( Math.sin(radLat1)*Math.cos(d/R) +
-			     Math.cos(radLat1)*Math.sin(d/R)*Math.cos(brng))
-			newLon = radLon1 + Math.atan2(Math.sin(brng)*Math.sin(d/R)*Math.cos(radLat1),
-			             Math.cos(d/R)-Math.sin(radLat1)*Math.sin(newLat))
-			this.setMarker(newLat.toDeg(), newLon.toDeg());
-  		}
 
   		this.segmentLine = function(){
   			var segmentLength = (this.getDistance() * .001) / points;
   			var R = 6378.1 ;
 			var d = segmentLength;
-  			//var brng = this.findBearing();
 			pointsArr.push({
 				'lat' : lat1,
 				'lon' : lon1 
@@ -110,16 +66,13 @@ window.TW = window.TW || {};
 			for( i=0; i < points; i++ ){
 				var newPointLatInRad = pointsArr[i]['lat'].toRad();
 				var newPointLonInRad = pointsArr[i]['lon'].toRad();
-
 				//find bearing
 				var dLon = (radLon2-newPointLonInRad);
 			    var y = Math.sin(dLon) * Math.cos(radLat2);
 				var x = Math.cos(newPointLatInRad)*Math.sin(radLat2) -
 				        Math.sin(newPointLatInRad)*Math.cos(radLat2)*Math.cos(dLon);
 				var brng = Math.atan2(y, x);
-
-
-				
+				//use newly found bearing to get new lat and new lon
 				var newLat = Math.asin( Math.sin(newPointLatInRad)*Math.cos(d/R) +
 				     Math.cos(newPointLatInRad)*Math.sin(d/R)*Math.cos(brng))
 				var newLon = newPointLonInRad + Math.atan2(Math.sin(brng)*Math.sin(d/R)*Math.cos(newPointLatInRad),
@@ -130,11 +83,11 @@ window.TW = window.TW || {};
 					'lon' : newLon.toDeg() 
 				});
 			}
-			console.log(pointsArr);
-  		}
-
-  		this.connectOrigins = function(){
-  			this.makeLine(lat1, lon1, lat2, lon2, '#0000FF' );
+			this.makeLine( 
+				pointsArr[0]['lat'], pointsArr[0]['lon'],
+				pointsArr[pointsArr.length - 1]['lat'], pointsArr[pointsArr.length - 1]['lon'],
+				'#FF0000'
+			)
   		}
 
   		this.getDistance = function(){
