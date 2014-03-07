@@ -117,7 +117,7 @@ window.TW = window.TW || {};
     function getElevation(event){
 		var locations = [];
 		var clickedLocation = event.latLng;
-		locations.push(clickedLocation);
+		locations.push(clickedLocation); 
 		var positionalRequest = {
 			'locations': locations
 		}

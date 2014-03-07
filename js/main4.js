@@ -2,15 +2,20 @@ window.TW = window.TW || {};
 
 (function(TW, self, undefined){
 
-	var markerLocations = [],
+	var markerLocations = [], elevator, setupObjects,
 	
 	makeButton = document.getElementById("make"),
 
 	config = {
-		samplePoints: 8
+		lineSegments: 50
 	},
 
-	map = TW.Setup.getMap();
+	setupObjects = TW.Setup.getSetupObjects();
+	map = setupObjects.map;
+	scene = setupObjects.scene;
+	renderer = setupObjects.renderer;
+	camera = setupObjects.camera;
+	gridSize = setupObjects.config.gridSize;
 
 	function addOriginalPoint(event){
 		if ( markerLocations.length == 2){
@@ -36,10 +41,7 @@ window.TW = window.TW || {};
   		var lon1 = markerLocations[0].getPosition().e;
   		var lat2 = markerLocations[1].getPosition().d;
   		var lon2 = markerLocations[1].getPosition().e;
-  		var gridOne = new Grid(lat1, lon1, lat2, lon2, config.samplePoints);
-  		gridOne.showMidPoint();
-  		gridOne.connectOrigins();
-  		gridOne.findHalf();
+  		var gridOne = new Grid(lat1, lon1, lat2, lon2, config.lineSegments);
   		gridOne.segmentLine();
   	};
  
@@ -57,85 +59,49 @@ window.TW = window.TW || {};
   		var locationOne = new google.maps.LatLng(lat1, lon1);
 		var locationTwo = new google.maps.LatLng(lat2, lon2);
 		var pointsArr = []
- 		
-  		this.showMidPoint = function(){
-			var dLon = ((lon2 - lon1)).toRad();
-			var Bx = Math.cos(radLat2) * Math.cos(dLon);
-			var By = Math.cos(radLat2) * Math.sin(dLon);
-			var lat3 = Math.atan2(Math.sin(radLat1) + Math.sin(radLat2), Math.sqrt((Math.cos(radLat1) + Bx) * (Math.cos(radLat1) + Bx) + By * By));
-			var lon3 = radLon1 + Math.atan2(By, Math.cos(radLat1) + Bx);
-			lat3 = (lat3).toDeg();
-			lon3 = (lon3).toDeg();
-			this.setMarker(lat3, lon3); 
-  		}
-
-  		this.findBearing = function(){
-  			var dLon = (radLon2-radLon1);
-		    var y = Math.sin(dLon) * Math.cos(radLat2);
-			var x = Math.cos(radLat1)*Math.sin(radLat2) -
-			        Math.sin(radLat1)*Math.cos(radLat2)*Math.cos(dLon);
-			var brng = Math.atan2(y, x);
-			return brng;
-  		}
-
-  		this.findHalf = function(){
-  			//first need to find the bearing
-  			var dLon = (radLon2-radLon1);
-		    var y = Math.sin(dLon) * Math.cos(radLat2);
-			var x = Math.cos(radLat1)*Math.sin(radLat2) -
-			        Math.sin(radLat1)*Math.cos(radLat2)*Math.cos(dLon);
-			var brng = Math.atan2(y, x);
-			
-			var wholeDistanceKm = this.getDistance() * .001;
-			
-			var R = 6378.1 ;
-			var d = wholeDistanceKm / 2; 
-			
-			newLat = Math.asin( Math.sin(radLat1)*Math.cos(d/R) +
-			     Math.cos(radLat1)*Math.sin(d/R)*Math.cos(brng))
-			newLon = radLon1 + Math.atan2(Math.sin(brng)*Math.sin(d/R)*Math.cos(radLat1),
-			             Math.cos(d/R)-Math.sin(radLat1)*Math.sin(newLat))
-			this.setMarker(newLat.toDeg(), newLon.toDeg());
-  		}
 
   		this.segmentLine = function(){
   			var segmentLength = (this.getDistance() * .001) / points;
   			var R = 6378.1 ;
 			var d = segmentLength;
-  			//var brng = this.findBearing();
 			pointsArr.push({
 				'lat' : lat1,
 				'lon' : lon1 
 			});
-			for( i=0; i < points; i++ ){
+			for( i=0; i < points; i++ ){ 
 				var newPointLatInRad = pointsArr[i]['lat'].toRad();
 				var newPointLonInRad = pointsArr[i]['lon'].toRad();
-
 				//find bearing
 				var dLon = (radLon2-newPointLonInRad);
 			    var y = Math.sin(dLon) * Math.cos(radLat2);
 				var x = Math.cos(newPointLatInRad)*Math.sin(radLat2) -
 				        Math.sin(newPointLatInRad)*Math.cos(radLat2)*Math.cos(dLon);
 				var brng = Math.atan2(y, x);
-
-
-				
+				//use newly found bearing to get new lat and new lon
 				var newLat = Math.asin( Math.sin(newPointLatInRad)*Math.cos(d/R) +
-				     Math.cos(newPointLatInRad)*Math.sin(d/R)*Math.cos(brng))
+				     Math.cos(newPointLatInRad)*Math.sin(d/R)*Math.cos(brng)); // this is in radians need to convert to degrees 
 				var newLon = newPointLonInRad + Math.atan2(Math.sin(brng)*Math.sin(d/R)*Math.cos(newPointLatInRad),
-				             Math.cos(d/R)-Math.sin(newPointLatInRad)*Math.sin(newLat));
-				this.setMarker(newLat.toDeg(), newLon.toDeg()); 
+				             Math.cos(d/R)-Math.sin(newPointLatInRad)*Math.sin(newLat)); // this is in radians need to convert to degrees
+				newLat = newLat.toDeg();
+				newLon = newLon.toDeg()
 				pointsArr.push({
-					'lat' : newLat.toDeg(),
-					'lon' : newLon.toDeg() 
+					'lat' : newLat,
+					'lon' : newLon,
 				});
+			} 
+			for( i = 0; i < pointsArr.length; i++){
+				this.setMarker(pointsArr[i]['lat'], pointsArr[i]['lon']);
 			}
-			console.log(pointsArr);
-  		}
-
-  		this.connectOrigins = function(){
-  			this.makeLine(lat1, lon1, lat2, lon2, '#0000FF' );
-  		}
+			this.makeLine( 
+				pointsArr[0]['lat'], pointsArr[0]['lon'],
+				pointsArr[pointsArr.length - 1]['lat'], pointsArr[pointsArr.length  - 1]['lon'],
+				'#FF0000'
+			)
+			this.makePath(
+				pointsArr[0]['lat'], pointsArr[0]['lon'],
+				pointsArr[pointsArr.length - 1]['lat'], pointsArr[pointsArr.length - 1]['lon']
+			);
+  		};
 
   		this.getDistance = function(){
 			var distance = google.maps.geometry.spherical.computeDistanceBetween(
@@ -143,18 +109,69 @@ window.TW = window.TW || {};
 				locationTwo
 			);
 			return distance;
-  		}
+  		};
   	}
 
   	Grid.prototype.setMarker = function(lat, lon) {
     	var markerPosition = new google.maps.LatLng(lat, lon);
-		marker = new google.maps.Marker({
+		marker = new google.maps.Marker({ 
 			map:map,
 			draggable:false,
 			animation: google.maps.Animation.DROP,
 			position: markerPosition
 		}); 
 		marker.setMap(map);
+	};
+
+	Grid.prototype.makePath = function(lat1, lon1, lat2, lon2, threeStartX, threeStartZ){
+		var path = [ 
+			new google.maps.LatLng(lat1, lon1), 
+			new google.maps.LatLng(lat2, lon2) 
+		];
+		var pathRequest = {
+			'path': path,
+			'samples': (config.lineSegments + 1)
+		}
+		elevator.getElevationAlongPath(pathRequest, function(results, status){
+			if (status != google.maps.ElevationStatus.OK) alert('sorry, google is all Fed');
+			
+			var elevations = results,
+				elevationPath = [],
+				randomColor1 = Math.floor( Math.random() * 256 ),
+				randomColor2 = Math.floor( Math.random() * 256 ),
+				lineGeometry = new THREE.Geometry();
+
+			for (var i = 0; i < results.length; i++) {
+				elevationPath.push(elevations[i].location);
+				var markerPosition = new google.maps.LatLng(elevations[i].location['d'], elevations[i].location['e']);
+				marker = new google.maps.Marker({
+					map:map,
+					draggable:false,
+					animation: google.maps.Animation.DROP,
+					position: markerPosition
+				}); 
+				marker.setMap(map);
+				var geometry = new THREE.SphereGeometry( 2, 32, 32 );
+				var material = new THREE.MeshBasicMaterial( {color: 
+					"rgb(" + Math.floor(255 * ( i / (config.lineSegments - 1) )) + "," + randomColor1 + "," + randomColor2 + ")" ,
+					wireframe: true
+				});
+				
+				var sphere = new THREE.Mesh( geometry, material );
+				
+				var positionX = (( (i / (results.length  - 1)) * gridSize ) * 2 ) - gridSize;
+				var positionY =  (elevations[i].elevation) * .2;
+				sphere.position.y = positionY;
+				sphere.position.x = positionX;
+				scene.add(sphere);
+				lineGeometry.vertices.push(new THREE.Vector3(positionX, positionY, 0));
+			}
+			var lineMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
+			var line = new THREE.Line(lineGeometry, lineMaterial);
+			scene.add(line);
+			renderer.render( scene, camera);
+		});
+		
 	};
 
 	Grid.prototype.makeLine = function(lat1, lon1, lat2, lon2, color) {
@@ -180,8 +197,9 @@ window.TW = window.TW || {};
 	};
 
     function init() {
+    	elevator = new google.maps.ElevationService();
     	bindDomEvents();
-    	console.log(TW.Setup.getGrid());
+    	//console.log(TW.Setup.getConfig());
     } 
 
     init();
