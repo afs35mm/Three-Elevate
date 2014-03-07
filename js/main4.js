@@ -152,10 +152,13 @@ window.TW = window.TW || {};
 				}); 
 				marker.setMap(map);
 				var geometry = new THREE.SphereGeometry( 2, 32, 32 );
-				var material = new THREE.MeshBasicMaterial( {color: 
+				// var material = new THREE.MeshBasicMaterial( {color: 
+				// 	"rgb(" + Math.floor(255 * ( i / (config.lineSegments - 1) )) + "," + randomColor1 + "," + randomColor2 + ")" ,
+
+				// });
+				var material = new THREE.MeshLambertMaterial ( { color: 
 					"rgb(" + Math.floor(255 * ( i / (config.lineSegments - 1) )) + "," + randomColor1 + "," + randomColor2 + ")" ,
-					wireframe: true
-				});
+				shading: THREE.FlatShading } );
 				
 				var sphere = new THREE.Mesh( geometry, material );
 				

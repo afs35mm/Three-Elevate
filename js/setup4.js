@@ -49,10 +49,10 @@ window.TW = window.TW || {};
 		scene.fog = new THREE.FogExp2( 0xcccccc, 0.002 );
 		// lights
 		light = new THREE.DirectionalLight( 0xffffff );
-		light.position.set( 1, 1, 1 );
+		light.position.set( 1, 0, 1 );
 		scene.add( light );
-		light = new THREE.DirectionalLight( 0x002288 );
-		light.position.set( -1, -1, -1 );
+		light = new THREE.DirectionalLight( 0xffffff );
+		light.position.set( -1, 0, -1 );
 		scene.add( light );
 		light = new THREE.AmbientLight( 0x222222 );
 		scene.add( light );
