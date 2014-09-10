@@ -1,7 +1,7 @@
 window.TW = window.TW || {};
 
 (function(TW, self, undefined){
-
+	console.log('setup4');
 	if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 	
 	var container, stats, camera, controls, scene, renderer, grid,

@@ -1,7 +1,8 @@
 window.TW = window.TW || {};
 
-(function(TW, self, undefined){
 
+(function(TW, self, undefined){
+	console.log('main4');
 	var markerLocations = [], elevator, setupObjects,
 	
 	makeButton = document.getElementById("make"),
@@ -18,17 +19,20 @@ window.TW = window.TW || {};
 	gridSize = setupObjects.config.gridSize;
 
 	function addOriginalPoint(event){
+		//console.log('making point');
 		if ( markerLocations.length == 2){
 			return;
 		}
 		var clickedLocation = event.latLng;
-		var clickedPosition = new google.maps.LatLng(clickedLocation.d, clickedLocation.e);
+		//console.log(clickedLocation['k'], clickedLocation['B']);
+		var clickedPosition = new google.maps.LatLng(clickedLocation['k'], clickedLocation['B']);
 		var marker = new google.maps.Marker({
 			map:map,
 			draggable:true,
 			animation: google.maps.Animation.DROP,
 			position: clickedPosition
 		});
+
 		markerLocations.push(marker);
 		if(markerLocations.length > 1){
 			makeButton.disabled = false;
@@ -37,10 +41,11 @@ window.TW = window.TW || {};
 	};
 
   	function makeGrid(){
-  		var lat1 = markerLocations[0].getPosition().d;
-  		var lon1 = markerLocations[0].getPosition().e;
-  		var lat2 = markerLocations[1].getPosition().d;
-  		var lon2 = markerLocations[1].getPosition().e;
+  		var lat1 = markerLocations[0].getPosition()['k'];
+  		var lon1 = markerLocations[0].getPosition()['B'];
+  		var lat2 = markerLocations[1].getPosition()['k'];
+  		var lon2 = markerLocations[1].getPosition()['B'];
+  		console.log(lat1, lon1, lat2, lon2, config.lineSegments);
   		var gridOne = new Grid(lat1, lon1, lat2, lon2, config.lineSegments);
   		gridOne.segmentLine();
   	};
@@ -52,6 +57,7 @@ window.TW = window.TW || {};
   		this.lat2 = lat2;
   		this.lon2 = lon2;
   		this.points = points;
+  		console.log(lat1);
   		var radLat1 = (lat1).toRad();
   		var radLat2 = (lat2).toRad();
   		var radLon1 = (lon1).toRad();
