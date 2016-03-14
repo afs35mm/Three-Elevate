@@ -24,18 +24,30 @@
 				z-index:101;
 				background:#fff;
 			}
-			#make{
-				position:absolute;
+			h3 {
+				float: left;
+				font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+   				font-weight: 300;
+   				margin: 0 15px 0 0;
+			}
+			#make {
+				float:left;
+			}
+			.make-container {
+				left: 10px;
+   				bottom: 10px;
+   				position:absolute;
 				z-index:101;
-				left:0;
-				bottom:0;
 			}
 		</style>
 
 	</head>
 
 	<body>
-		<button id="make" type="button">Get Midpoint</button>
+		<div class="make-container">
+			<h3>Click 2 points on the map, and then click: </h3>
+			<button id="make" type="button">Get Midpoint</button>
+		</div>
 		<div id="container"></div>
 		<div id="map"></div>
 	</body>
