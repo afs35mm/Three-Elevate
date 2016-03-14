@@ -4,7 +4,7 @@ window.TW = window.TW || {};
 (function(TW, self, undefined){
 	console.log('main4');
 	var markerLocations = [], elevator, setupObjects,
-	
+
 	makeButton = document.getElementById("make"),
 
 	config = {
@@ -19,13 +19,14 @@ window.TW = window.TW || {};
 	gridSize = setupObjects.config.gridSize;
 
 	function addOriginalPoint(event){
-		//console.log('making point');
+		console.log('making point');
 		if ( markerLocations.length == 2){
 			return;
 		}
+		console.log(event);
 		var clickedLocation = event.latLng;
-		//console.log(clickedLocation['k'], clickedLocation['B']);
-		var clickedPosition = new google.maps.LatLng(clickedLocation['k'], clickedLocation['B']);
+		console.log(event.latLng.lat(), event.latLng.lng());
+		var clickedPosition = new google.maps.LatLng(event.latLng.lat(), event.latLng.lng());
 		var marker = new google.maps.Marker({
 			map:map,
 			draggable:true,
@@ -41,15 +42,14 @@ window.TW = window.TW || {};
 	};
 
   	function makeGrid(){
-  		var lat1 = markerLocations[0].getPosition()['k'];
-  		var lon1 = markerLocations[0].getPosition()['B'];
-  		var lat2 = markerLocations[1].getPosition()['k'];
-  		var lon2 = markerLocations[1].getPosition()['B'];
-  		console.log(lat1, lon1, lat2, lon2, config.lineSegments);
+  		var lat1 = markerLocations[0].getPosition().lat();
+  		var lon1 = markerLocations[0].getPosition().lng();
+  		var lat2 = markerLocations[1].getPosition().lat();
+  		var lon2 = markerLocations[1].getPosition().lng();
   		var gridOne = new Grid(lat1, lon1, lat2, lon2, config.lineSegments);
   		gridOne.segmentLine();
   	};
- 
+
   	function Grid(lat1, lon1, lat2, lon2, points){
 
   		this.lat1 = lat1;
@@ -57,7 +57,6 @@ window.TW = window.TW || {};
   		this.lat2 = lat2;
   		this.lon2 = lon2;
   		this.points = points;
-  		console.log(lat1);
   		var radLat1 = (lat1).toRad();
   		var radLat2 = (lat2).toRad();
   		var radLon1 = (lon1).toRad();
@@ -72,9 +71,9 @@ window.TW = window.TW || {};
 			var d = segmentLength;
 			pointsArr.push({
 				'lat' : lat1,
-				'lon' : lon1 
+				'lon' : lon1
 			});
-			for( i=0; i < points; i++ ){ 
+			for( i=0; i < points; i++ ){
 				var newPointLatInRad = pointsArr[i]['lat'].toRad();
 				var newPointLonInRad = pointsArr[i]['lon'].toRad();
 				//find bearing
@@ -85,7 +84,7 @@ window.TW = window.TW || {};
 				var brng = Math.atan2(y, x);
 				//use newly found bearing to get new lat and new lon
 				var newLat = Math.asin( Math.sin(newPointLatInRad)*Math.cos(d/R) +
-				     Math.cos(newPointLatInRad)*Math.sin(d/R)*Math.cos(brng)); // this is in radians need to convert to degrees 
+				     Math.cos(newPointLatInRad)*Math.sin(d/R)*Math.cos(brng)); // this is in radians need to convert to degrees
 				var newLon = newPointLonInRad + Math.atan2(Math.sin(brng)*Math.sin(d/R)*Math.cos(newPointLatInRad),
 				             Math.cos(d/R)-Math.sin(newPointLatInRad)*Math.sin(newLat)); // this is in radians need to convert to degrees
 				newLat = newLat.toDeg();
@@ -94,11 +93,11 @@ window.TW = window.TW || {};
 					'lat' : newLat,
 					'lon' : newLon,
 				});
-			} 
+			}
 			for( i = 0; i < pointsArr.length; i++){
 				this.setMarker(pointsArr[i]['lat'], pointsArr[i]['lon']);
 			}
-			this.makeLine( 
+			this.makeLine(
 				pointsArr[0]['lat'], pointsArr[0]['lon'],
 				pointsArr[pointsArr.length - 1]['lat'], pointsArr[pointsArr.length  - 1]['lon'],
 				'#FF0000'
@@ -120,19 +119,19 @@ window.TW = window.TW || {};
 
   	Grid.prototype.setMarker = function(lat, lon) {
     	var markerPosition = new google.maps.LatLng(lat, lon);
-		marker = new google.maps.Marker({ 
+		marker = new google.maps.Marker({
 			map:map,
 			draggable:false,
 			animation: google.maps.Animation.DROP,
 			position: markerPosition
-		}); 
+		});
 		marker.setMap(map);
 	};
 
 	Grid.prototype.makePath = function(lat1, lon1, lat2, lon2, threeStartX, threeStartZ){
-		var path = [ 
-			new google.maps.LatLng(lat1, lon1), 
-			new google.maps.LatLng(lat2, lon2) 
+		var path = [
+			new google.maps.LatLng(lat1, lon1),
+			new google.maps.LatLng(lat2, lon2)
 		];
 		var pathRequest = {
 			'path': path,
@@ -140,7 +139,7 @@ window.TW = window.TW || {};
 		}
 		elevator.getElevationAlongPath(pathRequest, function(results, status){
 			if (status != google.maps.ElevationStatus.OK) alert('sorry, google is all Fed');
-			
+
 			var elevations = results,
 				elevationPath = [],
 				randomColor1 = Math.floor( Math.random() * 256 ),
@@ -155,19 +154,15 @@ window.TW = window.TW || {};
 					draggable:false,
 					animation: google.maps.Animation.DROP,
 					position: markerPosition
-				}); 
+				});
 				marker.setMap(map);
 				var geometry = new THREE.SphereGeometry( 2, 32, 32 );
-				// var material = new THREE.MeshBasicMaterial( {color: 
-				// 	"rgb(" + Math.floor(255 * ( i / (config.lineSegments - 1) )) + "," + randomColor1 + "," + randomColor2 + ")" ,
-
-				// });
-				var material = new THREE.MeshLambertMaterial ( { color: 
+				var material = new THREE.MeshLambertMaterial ( { color:
 					"rgb(" + Math.floor(255 * ( i / (config.lineSegments - 1) )) + "," + randomColor1 + "," + randomColor2 + ")" ,
 				shading: THREE.FlatShading } );
-				
+
 				var sphere = new THREE.Mesh( geometry, material );
-				
+
 				var positionX = (( (i / (results.length  - 1)) * gridSize ) * 2 ) - gridSize;
 				var positionY =  (elevations[i].elevation) * .2;
 				sphere.position.y = positionY;
@@ -180,7 +175,7 @@ window.TW = window.TW || {};
 			scene.add(line);
 			renderer.render( scene, camera);
 		});
-		
+
 	};
 
 	Grid.prototype.makeLine = function(lat1, lon1, lat2, lon2, color) {
@@ -209,7 +204,7 @@ window.TW = window.TW || {};
     	elevator = new google.maps.ElevationService();
     	bindDomEvents();
     	//console.log(TW.Setup.getConfig());
-    } 
+    }
 
     init();
 

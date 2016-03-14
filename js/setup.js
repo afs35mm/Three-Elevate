@@ -1,12 +1,12 @@
 window.TW = window.TW || {};
 
 (function(TW, self, undefined){
-
+	console.log('setup4');
 	if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
-	
+
 	var container, stats, camera, controls, scene, renderer, grid,
 		elevator, map, infowindow, flightPath, midwayMarker;
-	
+
 	var config = {
 		gridSize: 100,
 		gridUnit: 10
@@ -29,7 +29,7 @@ window.TW = window.TW || {};
 		renderer.render( scene, camera );
 		stats.update();
 	};
-    
+
     function setup3World( ) {
     	camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 1000 );
 		camera.position.z = 280;
@@ -48,14 +48,14 @@ window.TW = window.TW || {};
 		scene = new THREE.Scene();
 		scene.fog = new THREE.FogExp2( 0xcccccc, 0.002 );
 		// lights
-		// light = new THREE.DirectionalLight( 0xffffff );
-		// light.position.set( 1, 1, 1 );
-		// scene.add( light );
-		// light = new THREE.DirectionalLight( 0x002288 );
-		// light.position.set( -1, -1, -1 );
-		// scene.add( light );
-		// light = new THREE.AmbientLight( 0x222222 );
-		// scene.add( light );
+		light = new THREE.DirectionalLight( 0xffffff );
+		light.position.set( 1, 0, 1 );
+		scene.add( light );
+		light = new THREE.DirectionalLight( 0xffffff );
+		light.position.set( -1, 0, -1 );
+		scene.add( light );
+		light = new THREE.AmbientLight( 0x222222 );
+		scene.add( light );
 		// ORGINIAL SPHERES
 		var rgbRed =  "rgb(255,0,0)";
 		var geometry = new THREE.SphereGeometry( 3, 32, 32 );
@@ -131,7 +131,7 @@ window.TW = window.TW || {};
     	setupMap();
     	addAngleEquations();
     	bindDomEvents();
-    } 
+    }
 
     init();
 
