@@ -48,6 +48,9 @@ window.TW = window.TW || {};
   		var lon2 = markerLocations[1].getPosition().lng();
   		var gridOne = new Grid(lat1, lon1, lat2, lon2, config.lineSegments);
   		gridOne.segmentLine();
+
+  		var dragBtn = document.getElementsByClassName('dragEm');
+  		dragBtn[0].setAttribute('class', 'dragEm visible');
   	};
 
   	function Grid(lat1, lon1, lat2, lon2, points){
@@ -197,7 +200,7 @@ window.TW = window.TW || {};
 	function bindDomEvents(){
 		makeButton.disabled = true;
 		google.maps.event.addListener(map, 'click', addOriginalPoint);
-		makeButton.addEventListener("click", makeGrid );
+		makeButton.addEventListener('click', makeGrid );
 	};
 
     function init() {
